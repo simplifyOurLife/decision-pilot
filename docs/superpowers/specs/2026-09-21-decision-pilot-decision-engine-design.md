@@ -1,8 +1,8 @@
-# CodexPilot 决策引擎设计
+# DecisionPilot 决策引擎设计
 
 ## 1. 背景与目标
 
-CodexPilot 的长期目标是在 Codex 前增加一个低成本决策层，把搜索、读取、测试、重试、回答或升级等高频小判断交给廉价模型，复杂推理和代码修改仍由 Codex 完成。
+DecisionPilot 的长期目标是在 Codex 前增加一个低成本决策层，把搜索、读取、测试、重试、回答或升级等高频小判断交给廉价模型，复杂推理和代码修改仍由 Codex 完成。
 
 第一阶段不接管 Codex 流量，也不自动执行任何工具。它只验证一个前置假设：通过 DeepSeek Completion API 的单 Token 候选概率，能否以足够高的准确率、足够低的延迟和成本完成 Codex 开发流程中的路由判断。
 
@@ -35,7 +35,7 @@ CodexPilot 的长期目标是在 Codex 前增加一个低成本决策层，把�
 ### 3.2 不包含内容
 
 - HTTP 服务。
-- Codex 流量代理或 `codexpilot` 启动器。
+- Codex 流量代理或 `decision-pilot` 启动器。
 - Dashboard。
 - 多模型 Provider 实现。
 - shell、文件读写、测试运行等工具的自动执行。
@@ -197,9 +197,9 @@ p_i = exp(logprob_i - maxLogprob)
 ## 8. CLI 设计
 
 ```powershell
-codexpilot doctor
-codexpilot decide --input .\request.json
-codexpilot eval --dataset .\datasets\codex-routing.jsonl --report .\reports\result.json
+decision-pilot doctor
+decision-pilot decide --input .\request.json
+decision-pilot eval --dataset .\datasets\codex-routing.jsonl --report .\reports\result.json
 ```
 
 `decide` 支持文件输入和标准输入，默认输出 JSON。`eval` 在终端输出摘要，并将完整结构化报告写入指定路径。命令失败使用非零退出码，错误输出不包含 API Key、Authorization 请求头或完整原始状态。
