@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 
 import { runDecide } from './decide-command.js';
 import { runDoctor } from './doctor-command.js';
+import { runEval } from './eval-command.js';
 import { createProcessIo, type CommandIo } from './io.js';
 import { loadEnvironment } from '../config/environment.js';
 import { DecisionEngine } from '../core/decision-engine.js';
@@ -62,6 +63,38 @@ export async function runCli(args: string[], io: CommandIo = createProcessIo()):
       ...(values.input === undefined ? {} : { inputPath: values.input }),
       ...(threshold === undefined ? {} : { threshold })
     }, { engine: createEngine(environment.createProviderConfig()), io });
+  }
+
+  if (command === 'eval') {
+    let values: { dataset?: string; report?: string };
+    try {
+      ({ values } = parseArgs({
+        args: commandArgs,
+        options: {
+          dataset: { type: 'string' },
+          report: { type: 'string' }
+        },
+        strict: true
+      }));
+    } catch {
+      io.writeError(usage());
+      return 2;
+    }
+
+    if (values.dataset === undefined || values.report === undefined) {
+      io.writeError(usage());
+      return 2;
+    }
+    if (!environment.ok) {
+      io.writeError(`环境配置缺失或无效：${environment.errors.join(', ')}\n`);
+      return 2;
+    }
+
+    return runEval({ datasetPath: values.dataset, reportPath: values.report }, {
+      engine: createEngine(environment.createProviderConfig()),
+      io,
+      pricing: environment.pricing
+    });
   }
 
   io.writeError(usage());
