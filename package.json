@@ -1,0 +1,25 @@
+{
+  "name": "@simplifyourlife/decision-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "decision-pilot": "./dist/cli/main.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
