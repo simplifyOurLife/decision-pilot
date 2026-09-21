@@ -1,0 +1,11 @@
+# 依赖与构建产物
+node_modules/
+dist/
+
+# 本地环境与评测结果
+.env
+reports/*.json
+
+# 内部设计与实施计划只保留在本地
+docs/superpowers/specs/
+docs/superpowers/plans/
