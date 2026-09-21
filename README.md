@@ -54,20 +54,20 @@ $env:DECISION_PILOT_OUTPUT_PRICE_PER_MILLION = '0'
 先检查接口和单 Token 概率契约：
 
 ```powershell
-node dist/src/cli/main.js doctor
+node dist/cli/main.js doctor
 ```
 
 从文件执行一次决策：
 
 ```powershell
-node dist/src/cli/main.js decide --input examples/decision-request.json --threshold 0.90
+node dist/cli/main.js decide --input examples/decision-request.json --threshold 0.90
 ```
 
 也可以通过管道传入 JSON：
 
 ```powershell
 Get-Content examples/decision-request.json -Raw |
-  node dist/src/cli/main.js decide --threshold 0.90
+  node dist/cli/main.js decide --threshold 0.90
 ```
 
 ## 离线评测
@@ -75,7 +75,7 @@ Get-Content examples/decision-request.json -Raw |
 仓库提供 49 条平衡的 Codex 路由样本，每类各 7 条：`SEARCH`、`READ`、`EDIT`、`TEST`、`EXECUTE`、`ANSWER` 和 `ESCALATE`。
 
 ```powershell
-node dist/src/cli/main.js eval `
+node dist/cli/main.js eval `
   --dataset datasets/codex-routing.jsonl `
   --report reports/codex-routing.json
 ```
