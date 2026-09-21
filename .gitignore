@@ -4,7 +4,8 @@ dist/
 
 # 本地环境与评测结果
 .env
-reports/*.json
+reports/*
+!reports/.gitkeep
 
 # 内部设计与实施计划只保留在本地
 docs/superpowers/specs/
