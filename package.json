@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "bin": {
-    "decision-pilot": "./dist/cli/main.js"
+    "decision-pilot": "./dist/src/cli/main.js"
   },
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "build": "tsc --project tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

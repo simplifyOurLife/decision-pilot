@@ -1,0 +1,18 @@
+{
+  "state": "用户要求定位权限校验实现，但尚未提供文件位置",
+  "question": "下一步应该做什么？",
+  "options": [
+    {
+      "id": "SEARCH",
+      "description": "搜索权限校验相关代码"
+    },
+    {
+      "id": "READ",
+      "description": "读取已定位文件"
+    },
+    {
+      "id": "ESCALATE",
+      "description": "交给 Codex 深入判断"
+    }
+  ]
+}
