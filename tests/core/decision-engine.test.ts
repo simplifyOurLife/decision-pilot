@@ -54,6 +54,7 @@ describe('DecisionEngine', () => {
     expect(result.decision).toBe(reason === 'INVALID_GENERATED_TOKEN' ? '#' : 'SEARCH');
     expect(result.usage).toEqual(providerResult.usage);
     expect(result.model).toBe('deepseek-flash');
+    expect(result.confidenceSignals?.topOptionId).toBe('SEARCH');
   });
 
   it('每次决策只调用一次 Provider 并转发取消信号', async () => {

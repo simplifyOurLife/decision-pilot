@@ -22,6 +22,7 @@ function memoryIo(): CommandIo & { out: string[]; error: string[] } {
 const healthyResult: DecisionResult = {
   decision: 'ANSWER',
   confidence: 0.97,
+  confidenceSignals: null,
   accepted: true,
   probabilities: { ANSWER: 0.97, ESCALATE: 0.03 },
   coverage: { complete: true, missingOptions: [] },

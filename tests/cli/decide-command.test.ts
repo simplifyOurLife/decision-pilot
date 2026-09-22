@@ -17,6 +17,7 @@ const request = {
 const decision: DecisionResult = {
   decision: 'SEARCH',
   confidence: 0.95,
+  confidenceSignals: null,
   accepted: true,
   probabilities: { SEARCH: 0.95, ESCALATE: 0.05 },
   coverage: { complete: true, missingOptions: [] },

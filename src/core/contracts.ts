@@ -49,9 +49,18 @@ export type RejectionReason =
   | 'INVALID_GENERATED_TOKEN'
   | 'INVALID_PROVIDER_RESPONSE';
 
+export interface ConfidenceSignals {
+  topOptionId: string;
+  runnerUpOptionId: string | null;
+  topLogprob: number;
+  runnerUpLogprob: number | null;
+  logprobMargin: number | null;
+}
+
 export interface DecisionResult {
   decision: string;
   confidence: number;
+  confidenceSignals: ConfidenceSignals | null;
   accepted: boolean;
   rejectionReason?: RejectionReason;
   probabilities: Readonly<Record<string, number>>;

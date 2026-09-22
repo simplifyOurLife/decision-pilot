@@ -120,4 +120,64 @@ describe('normalizeCandidateProbabilities', () => {
       missingOptions: ['SEARCH']
     });
   });
+
+  it('返回第一名、第二名和原始 logprob margin', () => {
+    const result = normalizeCandidateProbabilities(plan, providerResult({
+      topLogprobs: new Map([
+        ['1', -0.2],
+        ['2', -1.7]
+      ])
+    }));
+
+    expect(result.confidenceSignals).toEqual({
+      topOptionId: 'SEARCH',
+      runnerUpOptionId: 'ESCALATE',
+      topLogprob: -0.2,
+      runnerUpLogprob: -1.7,
+      logprobMargin: 1.5
+    });
+  });
+
+  it('并列时保持请求顺序且 margin 为零', () => {
+    const result = normalizeCandidateProbabilities(plan, providerResult({
+      topLogprobs: new Map([
+        ['2', -1],
+        ['1', -1]
+      ])
+    }));
+
+    expect(result.confidenceSignals).toMatchObject({
+      topOptionId: 'SEARCH',
+      runnerUpOptionId: 'ESCALATE',
+      logprobMargin: 0
+    });
+  });
+
+  it('只有一个有效候选时第二名和 margin 为 null', () => {
+    const result = normalizeCandidateProbabilities(plan, providerResult({
+      topLogprobs: new Map([
+        ['1', -0.4],
+        ['2', Number.NaN]
+      ])
+    }));
+
+    expect(result.confidenceSignals).toEqual({
+      topOptionId: 'SEARCH',
+      runnerUpOptionId: null,
+      topLogprob: -0.4,
+      runnerUpLogprob: null,
+      logprobMargin: null
+    });
+  });
+
+  it('没有有效业务候选时返回 null 信号', () => {
+    const result = normalizeCandidateProbabilities(plan, providerResult({
+      topLogprobs: new Map([
+        ['#', -0.1],
+        ['1', Number.NaN]
+      ])
+    }));
+
+    expect(result.confidenceSignals).toBeNull();
+  });
 });

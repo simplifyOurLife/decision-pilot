@@ -1,9 +1,10 @@
-import type { ProviderResult } from './contracts.js';
+import type { ConfidenceSignals, ProviderResult } from './contracts.js';
 import type { PromptPlan } from './prompt-builder.js';
 
 export interface NormalizedProbabilities {
   generatedOptionId?: string;
   probabilities: Readonly<Record<string, number>>;
+  confidenceSignals: ConfidenceSignals | null;
   coverage: {
     complete: boolean;
     missingOptions: string[];
@@ -43,14 +44,28 @@ export function normalizeCandidateProbabilities(
   }
 
   const missingOptions: string[] = [];
-  const available = [...plan.tokenToOptionId.entries()].flatMap(([token, optionId]) => {
+  const available = [...plan.tokenToOptionId.entries()].flatMap(([token, optionId], order) => {
     const logprob = candidateLogprobs.get(token);
     if (logprob === undefined) {
       missingOptions.push(optionId);
       return [];
     }
-    return [{ optionId, logprob }];
+    return [{ optionId, logprob, order }];
   });
+  const ranked = [...available].sort((left, right) => (
+    right.logprob - left.logprob || left.order - right.order
+  ));
+  const top = ranked[0];
+  const runnerUp = ranked[1];
+  const confidenceSignals: ConfidenceSignals | null = top === undefined
+    ? null
+    : {
+      topOptionId: top.optionId,
+      runnerUpOptionId: runnerUp?.optionId ?? null,
+      topLogprob: top.logprob,
+      runnerUpLogprob: runnerUp?.logprob ?? null,
+      logprobMargin: runnerUp === undefined ? null : top.logprob - runnerUp.logprob
+    };
 
   const probabilities: Record<string, number> = {};
   if (available.length > 0) {
@@ -69,6 +84,7 @@ export function normalizeCandidateProbabilities(
   return {
     ...(generatedOptionId === undefined ? {} : { generatedOptionId }),
     probabilities,
+    confidenceSignals,
     coverage: {
       complete: missingOptions.length === 0,
       missingOptions

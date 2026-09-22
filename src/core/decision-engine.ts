@@ -50,6 +50,7 @@ export class DecisionEngine {
       return {
         decision,
         confidence: evaluation.confidence,
+        confidenceSignals: normalized.confidenceSignals,
         accepted: evaluation.accepted,
         ...(evaluation.rejectionReason === undefined
           ? {}

@@ -31,7 +31,7 @@ describe('runEval', () => {
     const write = vi.fn(async () => undefined);
     const engine = {
       decide: vi.fn(async () => ({
-        decision: 'SEARCH', confidence: 0.95, accepted: true,
+        decision: 'SEARCH', confidence: 0.95, confidenceSignals: null, accepted: true,
         probabilities: { SEARCH: 0.95, ESCALATE: 0.05 },
         coverage: { complete: true, missingOptions: [] },
         usage: { promptTokens: 10, completionTokens: 1, totalTokens: 11 },

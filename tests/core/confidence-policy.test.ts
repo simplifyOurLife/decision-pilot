@@ -10,6 +10,7 @@ function normalized(
   const generatedOptionId = options.generatedOptionId ?? 'SEARCH';
   return {
     ...(options.generatedOptionId === '' ? {} : { generatedOptionId }),
+    confidenceSignals: null,
     probabilities: {
       SEARCH: confidence,
       ESCALATE: 1 - confidence

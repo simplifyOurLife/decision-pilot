@@ -12,6 +12,7 @@ function result(
   return {
     decision,
     confidence,
+    confidenceSignals: null,
     accepted: complete && confidence >= 0.9,
     probabilities: { [decision]: confidence },
     coverage: { complete, missingOptions: complete ? [] : ['ESCALATE'] },
