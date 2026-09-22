@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type {
   RecommendToolFailure,
   RecommendToolSuccess,
+  RecordOutcomeToolFailure,
   RecordOutcomeToolSuccess
 } from '../../src/mcp/contracts.js';
 import { createDecisionPilotMcpServer } from '../../src/mcp/create-server.js';
@@ -50,6 +51,16 @@ const failure: RecommendToolFailure = {
   error: { code: 'PROVIDER_FAILURE', message: '决策服务暂时不可用' }
 };
 const outcomeSuccess: RecordOutcomeToolSuccess = { schemaVersion: 1, recorded: true };
+const invalidThreshold: RecommendToolFailure = {
+  schemaVersion: 1,
+  shadow: true,
+  error: { code: 'INVALID_THRESHOLD', message: '置信度阈值无效' }
+};
+const invalidOutcome: RecordOutcomeToolFailure = {
+  schemaVersion: 1,
+  recorded: false,
+  error: { code: 'INVALID_REQUEST', message: '工具输入无效' }
+};
 
 const closeables: Array<{ close(): Promise<void> }> = [];
 
@@ -59,7 +70,7 @@ afterEach(async () => {
 
 async function connect(application: {
   recommend(input: unknown): Promise<RecommendToolSuccess | RecommendToolFailure>;
-  recordOutcome(input: unknown): Promise<RecordOutcomeToolSuccess>;
+  recordOutcome(input: unknown): Promise<RecordOutcomeToolSuccess | RecordOutcomeToolFailure>;
 }): Promise<{ client: Client; server: McpServer }> {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const server = createDecisionPilotMcpServer(application);
@@ -88,6 +99,14 @@ describe('createDecisionPilotMcpServer', () => {
     ]);
     expect(tools.tools[0]?.description).toContain('仅供影子观测');
     expect(tools.tools[0]?.description).toContain('不授权执行任何动作');
+    const recommendSchema = tools.tools[0]?.inputSchema as {
+      required?: string[];
+      properties?: Record<string, { maximum?: number }>;
+    };
+    expect(recommendSchema.required).toEqual(
+      expect.arrayContaining(['state', 'question', 'options'])
+    );
+    expect(recommendSchema.properties?.threshold?.maximum).toBe(1);
   });
 
   it('通过结构化内容返回建议并原样传递已校验输入', async () => {
@@ -131,6 +150,36 @@ describe('createDecisionPilotMcpServer', () => {
     expect(application.recommend).not.toHaveBeenCalled();
   });
 
+  it('非法输入仍由应用层返回稳定结构化错误', async () => {
+    const application = {
+      recommend: vi.fn(async () => invalidThreshold),
+      recordOutcome: vi.fn(async () => invalidOutcome)
+    };
+    const { client } = await connect(application);
+    const invalidAction = 'SEARCH' + String.fromCharCode(10) + 'INJECT';
+
+    const recommendResult = await client.callTool({
+      name: 'decision_pilot_recommend',
+      arguments: { ...input, threshold: 2 }
+    });
+    const outcomeResult = await client.callTool({
+      name: 'decision_pilot_record_outcome',
+      arguments: {
+        traceId: '123e4567-e89b-42d3-a456-426614174000',
+        actualAction: invalidAction
+      }
+    });
+
+    expect(recommendResult.isError).toBe(true);
+    expect(recommendResult.structuredContent).toEqual(invalidThreshold);
+    expect(outcomeResult.isError).toBe(true);
+    expect(outcomeResult.structuredContent).toEqual(invalidOutcome);
+    expect(application.recommend).toHaveBeenCalledWith({ ...input, threshold: Number.NaN });
+    expect(application.recordOutcome).toHaveBeenCalledWith({
+      traceId: '123e4567-e89b-42d3-a456-426614174000',
+      actualAction: ''
+    });
+  });
   it('业务失败标记 isError 且不会关闭后续调用', async () => {
     const recommend = vi.fn()
       .mockResolvedValueOnce(failure)

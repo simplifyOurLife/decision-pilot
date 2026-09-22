@@ -143,6 +143,33 @@ describe('DecisionPilotApplication.recommend', () => {
     expect(decide).not.toHaveBeenCalled();
   });
 
+  it('无效生成 Token 不回显或写入 Provider 正文', async () => {
+    const { application, recordRecommendation } = createDependencies({
+      decide: async () => ({
+        ...decisionResult,
+        decision: 'provider-response-marker',
+        accepted: false,
+        rejectionReason: 'INVALID_GENERATED_TOKEN'
+      })
+    });
+
+    const output = await application.recommend(validInput);
+
+    expect(output).toMatchObject({
+      recommendation: {
+        decision: 'INVALID_GENERATED_TOKEN',
+        accepted: false,
+        rejectionReason: 'INVALID_GENERATED_TOKEN'
+      }
+    });
+    expect(recordRecommendation).toHaveBeenCalledWith(
+      expect.objectContaining({ predictedAction: 'INVALID_GENERATED_TOKEN' })
+    );
+    expect(JSON.stringify(output)).not.toContain('provider-response-marker');
+    expect(JSON.stringify(recordRecommendation.mock.calls)).not.toContain(
+      'provider-response-marker'
+    );
+  });
   it('Provider 失败只返回稳定错误而不回显异常正文', async () => {
     const { application, recordRecommendation } = createDependencies({
       decide: async () => {

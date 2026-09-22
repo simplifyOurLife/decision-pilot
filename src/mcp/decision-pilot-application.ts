@@ -96,13 +96,16 @@ export class DecisionPilotApplication {
       return recommendFailure(mapDecisionError(error));
     }
 
+    const safeDecision = result.rejectionReason === 'INVALID_GENERATED_TOKEN'
+      ? 'INVALID_GENERATED_TOKEN'
+      : result.decision;
     const traceId = this.createTraceId();
     try {
       await this.recorder.recordRecommendation({
         traceId,
         requestDigest: createRequestDigest(request),
         optionIds: request.options.map(({ id }) => id),
-        predictedAction: result.decision,
+        predictedAction: safeDecision,
         accepted: result.accepted,
         ...(result.rejectionReason === undefined
           ? {}
@@ -123,7 +126,7 @@ export class DecisionPilotApplication {
       shadow: true,
       traceId,
       recommendation: {
-        decision: result.decision,
+        decision: safeDecision,
         accepted: result.accepted,
         confidence: result.confidence,
         probabilities: { ...result.probabilities },

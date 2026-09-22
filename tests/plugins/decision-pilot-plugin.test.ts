@@ -56,7 +56,7 @@ describe('decision-pilot Codex 插件', () => {
 
     expect(server?.command).toBe('node');
     expect(server?.cwd).toBe('.');
-    expect(server?.args).toEqual(['../../dist/mcp/server.js']);
+    expect(server?.args).toEqual(['./mcp/server.bundle.mjs']);
     expect(server?.env_vars).toEqual(expect.arrayContaining([
       'DEEPSEEK_API_KEY',
       'DEEPSEEK_MODEL',
@@ -65,8 +65,19 @@ describe('decision-pilot Codex 插件', () => {
       'DECISION_PILOT_MAX_RETRIES'
     ]));
     expect(resolve(pluginRoot, server!.args![0]!)).toBe(
-      resolve(repositoryRoot, 'dist', 'mcp', 'server.js')
+      resolve(pluginRoot, 'mcp', 'server.bundle.mjs')
     );
+    expect(server?.env_vars).toContain('DECISION_PILOT_SHADOW_DIR');
+
+    const packageJson = await readJson(resolve(repositoryRoot, 'package.json')) as {
+      scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(packageJson.scripts?.build).toContain('esbuild src/mcp/server.ts');
+    expect(packageJson.scripts?.build).toContain(
+      '--outfile=plugins/decision-pilot/mcp/server.bundle.mjs'
+    );
+    expect(packageJson.devDependencies).toHaveProperty('esbuild');
     await expect(access(resolve(repositoryRoot, 'src', 'mcp', 'server.ts')))
       .resolves.toBeUndefined();
   });

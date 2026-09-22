@@ -5,10 +5,10 @@ import type {
   RecordOutcomeToolOutput
 } from './contracts.js';
 import {
-  recommendInputSchema,
   recommendToolOutputSchema,
-  recordOutcomeInputSchema,
-  recordOutcomeToolOutputSchema
+  recommendTransportInputSchema,
+  recordOutcomeToolOutputSchema,
+  recordOutcomeTransportInputSchema
 } from './schemas.js';
 
 export interface DecisionPilotTools {
@@ -34,7 +34,7 @@ export function createDecisionPilotMcpServer(
     {
       title: 'DecisionPilot 影子建议',
       description: '对下一步候选动作评分。输出仅供影子观测，不授权执行任何动作。',
-      inputSchema: recommendInputSchema,
+      inputSchema: recommendTransportInputSchema,
       outputSchema: recommendToolOutputSchema
     },
     async (input) => toolResult(await application.recommend(input))
@@ -45,7 +45,7 @@ export function createDecisionPilotMcpServer(
     {
       title: 'DecisionPilot 记录实际动作',
       description: '记录 Codex 已独立选择的实际动作标签，不会触发或执行该动作。',
-      inputSchema: recordOutcomeInputSchema,
+      inputSchema: recordOutcomeTransportInputSchema,
       outputSchema: recordOutcomeToolOutputSchema
     },
     async (input) => toolResult(await application.recordOutcome(input))

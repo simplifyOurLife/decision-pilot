@@ -25,6 +25,23 @@ export const recordOutcomeInputSchema = z.object({
   outcome: z.enum(['SUCCEEDED', 'FAILED', 'SKIPPED']).optional()
 });
 
+// MCP SDK 会在 handler 前校验输入。逐字段把非法值替换为固定无效哨兵，
+// 既保留工具发现 Schema，又让应用层返回稳定且不泄露输入的错误契约。
+export const recommendTransportInputSchema = z.object({
+  state: recommendInputSchema.shape.state.catch(''),
+  question: recommendInputSchema.shape.question.catch(''),
+  options: recommendInputSchema.shape.options.catch([]),
+  threshold: recommendInputSchema.shape.threshold.catch(Number.NaN)
+}).passthrough();
+
+export const recordOutcomeTransportInputSchema = z.object({
+  traceId: recordOutcomeInputSchema.shape.traceId.catch(''),
+  actualAction: recordOutcomeInputSchema.shape.actualAction.catch(''),
+  outcome: recordOutcomeInputSchema.shape.outcome.catch(
+    'INVALID_OUTCOME' as z.output<typeof recordOutcomeInputSchema.shape.outcome>
+  )
+}).passthrough();
+
 export const recommendToolOutputSchema = z.object({
   schemaVersion: z.literal(1),
   shadow: z.literal(true),

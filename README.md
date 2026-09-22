@@ -83,7 +83,7 @@ npm install
 npm run build
 ~~~
 
-插件需要构建产物 dist/mcp/server.js。仓库 marketplace 文件位于 D:\github\CodexPilot\.agents\plugins\marketplace.json。本机 Codex CLI 已核验使用单数 plugin 命令；首次安装时执行：
+插件需要构建产物 plugins/decision-pilot/mcp/server.bundle.mjs；该 bundle 会随插件一起进入 Codex 缓存。仓库 marketplace 文件位于 D:\github\CodexPilot\.agents\plugins\marketplace.json。本机 Codex CLI 已核验使用单数 plugin 命令；首次安装时执行：
 
 ~~~powershell
 codex plugin marketplace add D:\github\CodexPilot
@@ -98,6 +98,7 @@ codex plugin list --marketplace personal
 Codex 进程需要从 Windows 用户环境继承 DEEPSEEK_API_KEY 和 DEEPSEEK_MODEL。修改用户环境变量后，应彻底退出并重启 Codex。以下配置可选：
 
 - DEEPSEEK_BASE_URL
+- DECISION_PILOT_SHADOW_DIR（可选，覆盖影子日志目录）
 - DECISION_PILOT_TIMEOUT_MS
 - DECISION_PILOT_MAX_RETRIES
 - DECISION_PILOT_INPUT_PRICE_PER_MILLION
@@ -109,11 +110,11 @@ Codex 进程需要从 Windows 用户环境继承 DEEPSEEK_API_KEY 和 DEEPSEEK_M
 
 当下一步存在至少两个合理候选时，路由 Skill 会把最小必要状态、问题和候选动作交给 decision_pilot_recommend，并始终保留 ESCALATE。Codex 独立决定实际动作；若收到 traceId，再用 decision_pilot_record_outcome 如实写入结果标签。
 
-recommendation 成功时会返回 shadow: true。影子事件写入 .decision-pilot/shadow/ 下的按日 JSONL 文件，该目录默认不会进入 Git。日志保存请求摘要、概率信号和结果标签，不保存原始 state、question、API Key 或 Provider 响应正文。可以在一次推荐和一次结果记录后检查：
+recommendation 成功时会返回 shadow: true。影子事件默认写入 $env:USERPROFILE\.decision-pilot\shadow 下的按日 JSONL 文件；也可通过 DECISION_PILOT_SHADOW_DIR 覆盖，该目录默认不会进入 Git。日志保存请求摘要、概率信号和结果标签，不保存原始 state、question、API Key 或 Provider 响应正文。可以在一次推荐和一次结果记录后检查：
 
 ~~~powershell
-Get-ChildItem .decision-pilot\shadow
-Get-Content .decision-pilot\shadow\*.jsonl -Tail 2
+Get-ChildItem $env:USERPROFILE\.decision-pilot\shadow
+Get-Content $env:USERPROFILE\.decision-pilot\shadow\*.jsonl -Tail 2
 ~~~
 
 两行事件应能通过相同 traceId 关联。当前阶段不承诺节省 Codex Token；先积累 200–500 条真实影子样本，评估准确率、覆盖率、延迟与成本，再决定阈值调整或是否开发外部 Runner。

@@ -13,3 +13,6 @@ docs/superpowers/plans/
 
 # DecisionPilot 本机影子日志
 .decision-pilot/
+
+# 本地构建的 Codex MCP bundle
+plugins/decision-pilot/mcp/

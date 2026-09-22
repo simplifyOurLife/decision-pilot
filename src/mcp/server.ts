@@ -8,6 +8,7 @@ import { DeepSeekCompletionProvider } from '../providers/deepseek-completion-pro
 import { ShadowRecorder } from '../shadow/shadow-recorder.js';
 import { createDecisionPilotMcpServer } from './create-server.js';
 import { DecisionPilotApplication } from './decision-pilot-application.js';
+import { resolveShadowRoot } from './runtime-paths.js';
 
 async function main(): Promise<void> {
   const environment = loadEnvironment(process.env);
@@ -19,7 +20,7 @@ async function main(): Promise<void> {
 
   const provider = new DeepSeekCompletionProvider(environment.createProviderConfig());
   const engine = new DecisionEngine(provider);
-  const recorder = new ShadowRecorder();
+  const recorder = new ShadowRecorder({ rootDirectory: resolveShadowRoot(process.env) });
   const application = new DecisionPilotApplication(engine, recorder);
   const server = createDecisionPilotMcpServer(application);
   const transport = new StdioServerTransport();
