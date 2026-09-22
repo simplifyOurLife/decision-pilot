@@ -25,61 +25,34 @@ export const recordOutcomeInputSchema = z.object({
   outcome: z.enum(['SUCCEEDED', 'FAILED', 'SKIPPED']).optional()
 });
 
-const recommendationErrorSchema = z.object({
+export const recommendToolOutputSchema = z.object({
   schemaVersion: z.literal(1),
   shadow: z.literal(true),
-  error: z.object({
-    code: z.enum([
-      'INVALID_REQUEST',
-      'INVALID_THRESHOLD',
-      'PROVIDER_FAILURE',
-      'SHADOW_LOG_FAILURE'
-    ]),
-    message: z.string()
+  traceId: z.string(),
+  recommendation: z.object({
+    decision: z.string(),
+    accepted: z.boolean(),
+    confidence: z.number(),
+    probabilities: z.record(z.string(), z.number()),
+    confidenceSignals: confidenceSignalsSchema.nullable(),
+    coverageComplete: z.boolean(),
+    rejectionReason: z.enum([
+      'LOW_CONFIDENCE',
+      'INCOMPLETE_COVERAGE',
+      'INVALID_GENERATED_TOKEN',
+      'INVALID_PROVIDER_RESPONSE'
+    ]).optional()
+  }),
+  telemetry: z.object({
+    model: z.string(),
+    latencyMs: z.number(),
+    promptTokens: z.number(),
+    completionTokens: z.number(),
+    totalTokens: z.number()
   })
 });
 
-export const recommendToolOutputSchema = z.union([
-  z.object({
-    schemaVersion: z.literal(1),
-    shadow: z.literal(true),
-    traceId: z.string(),
-    recommendation: z.object({
-      decision: z.string(),
-      accepted: z.boolean(),
-      confidence: z.number(),
-      probabilities: z.record(z.string(), z.number()),
-      confidenceSignals: confidenceSignalsSchema.nullable(),
-      coverageComplete: z.boolean(),
-      rejectionReason: z.enum([
-        'LOW_CONFIDENCE',
-        'INCOMPLETE_COVERAGE',
-        'INVALID_GENERATED_TOKEN',
-        'INVALID_PROVIDER_RESPONSE'
-      ]).optional()
-    }),
-    telemetry: z.object({
-      model: z.string(),
-      latencyMs: z.number(),
-      promptTokens: z.number(),
-      completionTokens: z.number(),
-      totalTokens: z.number()
-    })
-  }),
-  recommendationErrorSchema
-]);
-
-export const recordOutcomeToolOutputSchema = z.union([
-  z.object({
-    schemaVersion: z.literal(1),
-    recorded: z.literal(true)
-  }),
-  z.object({
-    schemaVersion: z.literal(1),
-    recorded: z.literal(false),
-    error: z.object({
-      code: z.enum(['INVALID_REQUEST', 'SHADOW_LOG_FAILURE']),
-      message: z.string()
-    })
-  })
-]);
+export const recordOutcomeToolOutputSchema = z.object({
+  schemaVersion: z.literal(1),
+  recorded: z.literal(true)
+});
