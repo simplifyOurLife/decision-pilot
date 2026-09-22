@@ -10,3 +10,6 @@ reports/*
 # 内部设计与实施计划只保留在本地
 docs/superpowers/specs/
 docs/superpowers/plans/
+
+# DecisionPilot 本机影子日志
+.decision-pilot/

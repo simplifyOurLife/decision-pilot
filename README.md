@@ -70,6 +70,54 @@ Get-Content examples/decision-request.json -Raw |
   node dist/cli/main.js decide --threshold 0.90
 ```
 
+## Codex 影子插件
+
+仓库内提供 DecisionPilot Codex 插件。它以影子模式观察“下一步做什么”的分支：recommendation 只返回建议，不执行动作，也不构成权限或安全授权；record_outcome 只记录 Codex 实际选择的动作和成功、失败或跳过标签。任一插件、MCP 或 Provider 调用失败时，Codex 都应继续原有流程，不循环重试或阻塞任务。
+
+### 构建和安装
+
+首次使用先安装依赖，再由使用者构建 MCP 入口：
+
+~~~powershell
+npm install
+npm run build
+~~~
+
+插件需要构建产物 dist/mcp/server.js。仓库 marketplace 文件位于 D:\github\CodexPilot\.agents\plugins\marketplace.json。本机 Codex CLI 已核验使用单数 plugin 命令；首次安装时执行：
+
+~~~powershell
+codex plugin marketplace add D:\github\CodexPilot
+codex plugin add decision-pilot@personal
+codex plugin list --marketplace personal
+~~~
+
+如果 marketplace 已存在，不必重复添加。安装或更新后重启 Codex，并新建任务，让 Codex 重新加载 Skill 和两个 MCP 工具。
+
+### 环境变量
+
+Codex 进程需要从 Windows 用户环境继承 DEEPSEEK_API_KEY 和 DEEPSEEK_MODEL。修改用户环境变量后，应彻底退出并重启 Codex。以下配置可选：
+
+- DEEPSEEK_BASE_URL
+- DECISION_PILOT_TIMEOUT_MS
+- DECISION_PILOT_MAX_RETRIES
+- DECISION_PILOT_INPUT_PRICE_PER_MILLION
+- DECISION_PILOT_OUTPUT_PRICE_PER_MILLION
+
+不要把 API Key 写进仓库、提示词或日志。插件配置只声明允许从宿主进程继承的变量名，不保存变量值。
+
+### 运行方式与验收
+
+当下一步存在至少两个合理候选时，路由 Skill 会把最小必要状态、问题和候选动作交给 decision_pilot_recommend，并始终保留 ESCALATE。Codex 独立决定实际动作；若收到 traceId，再用 decision_pilot_record_outcome 如实写入结果标签。
+
+recommendation 成功时会返回 shadow: true。影子事件写入 .decision-pilot/shadow/ 下的按日 JSONL 文件，该目录默认不会进入 Git。日志保存请求摘要、概率信号和结果标签，不保存原始 state、question、API Key 或 Provider 响应正文。可以在一次推荐和一次结果记录后检查：
+
+~~~powershell
+Get-ChildItem .decision-pilot\shadow
+Get-Content .decision-pilot\shadow\*.jsonl -Tail 2
+~~~
+
+两行事件应能通过相同 traceId 关联。当前阶段不承诺节省 Codex Token；先积累 200–500 条真实影子样本，评估准确率、覆盖率、延迟与成本，再决定阈值调整或是否开发外部 Runner。
+
 ## 离线评测
 
 仓库提供 49 条平衡的 Codex 路由样本，每类各 7 条：`SEARCH`、`READ`、`EDIT`、`TEST`、`EXECUTE`、`ANSWER` 和 `ESCALATE`。
@@ -111,7 +159,7 @@ npm test -- tests/online/deepseek-online.test.ts
 
 ## 当前状态
 
-当前仓库已实现核心评分库、DeepSeek Provider、CLI、离线评测和 Codex 路由评测集。它仍是验证性 MVP，不承诺降低 Codex 订阅额度；应先验证准确率、选择性覆盖率、延迟和 Token 成本，再决定是否进入更深层集成。
+当前仓库已实现核心评分库、DeepSeek Provider、CLI、离线评测、Codex 路由评测集，以及只给建议和记录标签的 Codex 影子插件。它仍是验证性 MVP，不承诺降低 Codex 订阅额度；应先验证准确率、选择性覆盖率、延迟和 Token 成本，再决定是否进入更深层集成。
 
 ## 输入输出
 
