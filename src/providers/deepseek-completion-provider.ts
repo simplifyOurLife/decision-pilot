@@ -83,10 +83,16 @@ export class DeepSeekCompletionProvider implements DecisionProvider {
       }
 
       const choice = parsed.data.choices[0]!;
-      const topLogprobs = choice.logprobs.top_logprobs[0]!;
+      const generated = choice.logprobs.content[0]!;
+      const topLogprobs = new Map(
+        generated.top_logprobs.map((candidate) => [candidate.token, candidate.logprob])
+      );
+      if (!topLogprobs.has(generated.token)) {
+        topLogprobs.set(generated.token, generated.logprob);
+      }
       return {
-        generatedToken: choice.text,
-        topLogprobs: new Map(Object.entries(topLogprobs)),
+        generatedToken: generated.token,
+        topLogprobs,
         usage: {
           promptTokens: parsed.data.usage.prompt_tokens,
           completionTokens: parsed.data.usage.completion_tokens,
@@ -120,11 +126,13 @@ export class DeepSeekCompletionProvider implements DecisionProvider {
         },
         body: JSON.stringify({
           model: this.config.model,
-          prompt,
+          messages: [{ role: 'user', content: prompt }],
           max_tokens: 1,
-          logprobs: 20,
+          logprobs: true,
+          top_logprobs: 20,
           stream: false,
-          temperature: 0
+          temperature: 0,
+          thinking: { type: 'disabled' }
         }),
         signal: controller.signal
       });
@@ -162,6 +170,6 @@ export class DeepSeekCompletionProvider implements DecisionProvider {
   }
 
   private completionsUrl(): string {
-    return `${this.config.baseUrl.replace(/\/+$/, '')}/completions`;
+    return `${this.config.baseUrl.replace(/\/+$/, '')}/chat/completions`;
   }
 }

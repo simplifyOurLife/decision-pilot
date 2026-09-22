@@ -1,0 +1,35 @@
+{
+  "id": "decision-fixture-chat-001",
+  "object": "chat.completion",
+  "created": 1789981946,
+  "model": "deepseek-flash",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "1"
+      },
+      "logprobs": {
+        "content": [
+          {
+            "token": "1",
+            "logprob": -0.059441254,
+            "bytes": [49],
+            "top_logprobs": [
+              { "token": "1", "logprob": -0.059441254, "bytes": [49] },
+              { "token": "2", "logprob": -4.958428, "bytes": [50] },
+              { "token": "4", "logprob": -3.3445632, "bytes": [52] }
+            ]
+          }
+        ]
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 57,
+    "completion_tokens": 1,
+    "total_tokens": 58
+  }
+}

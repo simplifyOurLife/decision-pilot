@@ -4,7 +4,7 @@ DecisionPilot 是一个面向 Coding Agent 的轻量决策引擎实验项目。�
 
 ## 项目目标
 
-传统 Agent 往往让大模型为每一个工具选择重新读取上下文并生成解释。DecisionPilot 的第一阶段使用 DeepSeek Completion API 的单 Token `logprobs`，把候选操作映射为数字并直接获得候选概率，以验证这种方式能否降低决策成本和延迟。
+传统 Agent 往往让大模型为每一个工具选择重新读取上下文并生成解释。DecisionPilot 的第一阶段使用 DeepSeek Chat Completions API 的单 Token `logprobs`，把候选操作映射为数字并直接获得候选概率，以验证这种方式能否降低决策成本和延迟。
 
 ```text
 状态 + 问题 + 候选项
@@ -41,7 +41,7 @@ DecisionPilot 不自动读取 `.env` 文件。请在当前终端通过环境变�
 
 ```powershell
 $env:DEEPSEEK_API_KEY = '你的 API Key'
-$env:DEEPSEEK_MODEL = '支持 Completion logprobs 的模型名称'
+$env:DEEPSEEK_MODEL = '支持 Chat Completions logprobs 的模型名称'
 
 # 可选配置
 $env:DEEPSEEK_BASE_URL = 'https://api.deepseek.com/beta'
@@ -98,7 +98,7 @@ $env:DECISION_PILOT_ONLINE_TEST = '1'
 npm test -- tests/online/deepseek-online.test.ts
 ```
 
-在线测试依赖 DeepSeek Beta Completion API 的 `logprobs`、单 Token 输出和候选覆盖行为。Beta 接口及模型能力可能变化；升级模型或更改基础地址后应先运行 `doctor` 和在线契约测试，不能把历史评测结果视为持续保证。
+在线测试依赖 DeepSeek Chat Completions API 的 `logprobs`、单 Token 输出和候选覆盖行为。接口及模型能力可能变化；升级模型或更改基础地址后应先运行 `doctor` 和在线契约测试，不能把历史评测结果视为持续保证。
 
 ## 设计原则
 

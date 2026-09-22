@@ -19,7 +19,7 @@ const config: DeepSeekProviderConfig = {
 };
 
 async function loadFixture(): Promise<unknown> {
-  const fixtureUrl = new URL('../fixtures/deepseek-completion-success.json', import.meta.url);
+  const fixtureUrl = new URL('../fixtures/deepseek-chat-completion-success.json', import.meta.url);
   return JSON.parse(await readFile(fixtureUrl, 'utf8'));
 }
 
@@ -51,7 +51,7 @@ afterEach(() => {
 });
 
 describe('DeepSeekCompletionProvider', () => {
-  it('发送单 Token 请求并解析 Completion 响应', async () => {
+  it('发送单 Token 请求并解析 Chat Completion 响应', async () => {
     const fixture = await loadFixture();
     const fetchMock = vi.fn<ProviderDependencies['fetch']>(
       async () => jsonResponse(fixture)
@@ -72,7 +72,7 @@ describe('DeepSeekCompletionProvider', () => {
     expect(result.latencyMs).toBe(286);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
-    expect(url).toBe('https://api.deepseek.com/beta/completions');
+    expect(url).toBe('https://api.deepseek.com/beta/chat/completions');
     expect(init?.method).toBe('POST');
     expect(init?.headers).toMatchObject({
       Authorization: `Bearer ${apiKey}`,
@@ -80,11 +80,13 @@ describe('DeepSeekCompletionProvider', () => {
     });
     expect(JSON.parse(String(init?.body))).toEqual({
       model: 'deepseek-flash',
-      prompt: 'PROMPT',
+      messages: [{ role: 'user', content: 'PROMPT' }],
       max_tokens: 1,
-      logprobs: 20,
+      logprobs: true,
+      top_logprobs: 20,
       stream: false,
-      temperature: 0
+      temperature: 0,
+      thinking: { type: 'disabled' }
     });
   });
 
@@ -178,10 +180,10 @@ describe('DeepSeekCompletionProvider', () => {
     const sensitiveMarker = '不应出现在诊断中的响应内容';
     const fetchMock = vi.fn(async () => jsonResponse({
       id: sensitiveMarker,
-      object: 'text_completion',
+      object: 'chat.completion',
       model: 'deepseek-flash',
       choices: [{
-        text: '1',
+        message: { role: 'assistant', content: '1' },
         finish_reason: 'length',
         logprobs: null
       }],
