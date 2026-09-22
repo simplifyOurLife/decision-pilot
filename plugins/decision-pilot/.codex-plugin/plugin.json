@@ -1,0 +1,29 @@
+{
+  "name": "decision-pilot",
+  "version": "0.1.0",
+  "description": "为 Codex 提供仅观测、不执行动作的 DecisionPilot 路由建议。",
+  "author": {
+    "name": "simplifyOurLife",
+    "url": "https://github.com/simplifyOurLife"
+  },
+  "homepage": "https://github.com/simplifyOurLife/decision-pilot",
+  "repository": "https://github.com/simplifyOurLife/decision-pilot",
+  "keywords": [
+    "decision-routing",
+    "mcp",
+    "shadow-mode"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "DecisionPilot",
+    "shortDescription": "用影子模式评估下一步动作。",
+    "longDescription": "在不授权或执行动作的前提下，为 Codex 提供结构化下一步建议并记录真实结果。",
+    "developerName": "simplifyOurLife",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": "在下一步有多个合理候选时使用 DecisionPilot 影子路由。"
+  }
+}

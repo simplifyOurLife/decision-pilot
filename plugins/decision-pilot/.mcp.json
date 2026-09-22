@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "decision-pilot": {
+      "command": "node",
+      "cwd": ".",
+      "args": [
+        "../../dist/mcp/server.js"
+      ],
+      "env_vars": [
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_MODEL",
+        "DEEPSEEK_BASE_URL",
+        "DECISION_PILOT_TIMEOUT_MS",
+        "DECISION_PILOT_MAX_RETRIES",
+        "DECISION_PILOT_INPUT_PRICE_PER_MILLION",
+        "DECISION_PILOT_OUTPUT_PRICE_PER_MILLION"
+      ],
+      "startup_timeout_sec": 30,
+      "tool_timeout_sec": 60
+    }
+  }
+}
