@@ -73,7 +73,13 @@ export class DeepSeekCompletionProvider implements DecisionProvider {
       const body = await this.readJson(response);
       const parsed = deepSeekCompletionResponseSchema.safeParse(body);
       if (!parsed.success) {
-        throw new ProviderError('INVALID_RESPONSE', 'DeepSeek 返回了不符合契约的响应');
+        const issuePaths = [...new Set(parsed.error.issues.map((issue) => (
+          issue.path.length === 0 ? 'response' : issue.path.join('.')
+        )))].slice(0, 5);
+        throw new ProviderError(
+          'INVALID_RESPONSE',
+          `DeepSeek 返回了不符合契约的响应（字段：${issuePaths.join(', ')}）`
+        );
       }
 
       const choice = parsed.data.choices[0]!;

@@ -173,4 +173,31 @@ describe('DeepSeekCompletionProvider', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('契约失败时只报告字段路径，不回显响应内容', async () => {
+    const sensitiveMarker = '不应出现在诊断中的响应内容';
+    const fetchMock = vi.fn(async () => jsonResponse({
+      id: sensitiveMarker,
+      object: 'text_completion',
+      model: 'deepseek-flash',
+      choices: [{
+        text: '1',
+        finish_reason: 'length',
+        logprobs: null
+      }],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 1,
+        total_tokens: 11
+      }
+    }));
+    const provider = createProvider(fetchMock);
+
+    const error = await provider.score('PROMPT').catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ProviderError);
+    expect(error).toMatchObject({ code: 'INVALID_RESPONSE' });
+    expect((error as Error).message).toContain('choices.0.logprobs');
+    expect((error as Error).message).not.toContain(sensitiveMarker);
+  });
 });
