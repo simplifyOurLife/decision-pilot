@@ -74,7 +74,28 @@ Get-Content examples/decision-request.json -Raw |
 
 仓库内提供 DecisionPilot Codex 插件。它以影子模式观察“下一步做什么”的分支：recommendation 只返回建议，不执行动作，也不构成权限或安全授权；record_outcome 只记录 Codex 实际选择的动作和成功、失败或跳过标签。任一插件、MCP 或 Provider 调用失败时，Codex 都应继续原有流程，不循环重试或阻塞任务。
 
-### 构建和安装
+### 从 Release 安装（推荐）
+
+正式版本会在 [GitHub Releases](https://github.com/simplifyOurLife/decision-pilot/releases) 提供可直接安装的 ZIP 包和 SHA-256 校验文件。以 `v0.1.0` 为例，下载并校验：
+
+~~~powershell
+$version = '0.1.0'
+$archive = ".\decision-pilot-v$version.zip"
+$checksum = ".\decision-pilot-v$version.sha256"
+$expected = ((Get-Content $checksum -Raw).Trim() -split '\s+')[0].ToLower()
+$actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+if ($actual -ne $expected) { throw 'DecisionPilot 安装包校验失败' }
+
+Expand-Archive $archive -DestinationPath . -Force
+$releaseDir = (Resolve-Path ".\decision-pilot-v$version").Path
+codex plugin marketplace add $releaseDir
+codex plugin add decision-pilot@personal
+codex plugin list --marketplace personal
+~~~
+
+安装或更新后重启 Codex，并新建任务，让 Codex 重新加载 Skill 和两个 MCP 工具。
+
+### 从源码构建和安装
 
 首次使用先安装依赖，再由使用者构建 MCP 入口：
 
@@ -149,6 +170,17 @@ npm test -- tests/online/deepseek-online.test.ts
 
 在线测试依赖 DeepSeek Chat Completions API 的 `logprobs`、单 Token 输出和候选覆盖行为。接口及模型能力可能变化；升级模型或更改基础地址后应先运行 `doctor` 和在线契约测试，不能把历史评测结果视为持续保证。
 
+## 版本发布
+
+维护者发布正式版本前，需要保证 `package.json`、`package-lock.json` 和 `plugins/decision-pilot/.codex-plugin/plugin.json` 中的版本号一致。提交并推送代码后，创建符合语义化版本格式的 Tag：
+
+```powershell
+git tag -a v0.1.0 -m "发布 v0.1.0"
+git push origin v0.1.0
+```
+
+Tag 推送后，GitHub Actions 会自动校验版本号、安装依赖、运行类型检查与离线测试、构建项目，并生成插件 ZIP 和 SHA-256 校验文件。全部成功后才会创建 GitHub Release；在线 DeepSeek 测试不会在发布流程中运行，也不需要仓库保存 API Key。
+
 ## 设计原则
 
 - 高置信度决策才允许被调用方接受。
@@ -200,3 +232,7 @@ npm test -- tests/online/deepseek-online.test.ts
 ## 项目边界
 
 DecisionPilot 是独立实验项目，不隶属于 OpenAI、Codex 或 DeepSeek。它不代理或拦截 Codex 请求，也不会替 Codex 自动执行工具、shell、测试或文件修改。模型输出具有不确定性；即使置信度较高，也不应直接用于高风险或不可逆操作。
+
+## 开源许可证
+
+本项目采用 [MIT License](LICENSE)，Copyright (c) 2026 qiyifeng。

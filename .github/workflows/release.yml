@@ -1,0 +1,98 @@
+name: 发布版本
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 构建并发布 ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 校验版本号
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          const tag = process.env.RELEASE_TAG;
+          if (!/^v\d+\.\d+\.\d+$/.test(tag ?? '')) {
+            throw new Error('版本 Tag 必须符合 v主版本.次版本.修订版本，当前为：' + tag);
+          }
+
+          const expectedVersion = tag.slice(1);
+          const manifests = [
+            ['package.json', 'package.json'],
+            ['package-lock.json', 'package-lock.json'],
+            ['插件清单', 'plugins/decision-pilot/.codex-plugin/plugin.json'],
+          ];
+
+          for (const [name, path] of manifests) {
+            const manifest = JSON.parse(readFileSync(path, 'utf8'));
+            if (manifest.version !== expectedVersion) {
+              throw new Error(name + ' 版本 ' + manifest.version + ' 与 Tag ' + tag + ' 不一致');
+            }
+          }
+
+          console.log('版本校验通过：' + tag);
+          NODE
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 运行测试
+        run: npm test
+
+      - name: 构建项目
+        run: npm run build
+
+      - name: 组装发布包
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package_name="decision-pilot-v${version}"
+          package_root="release/${package_name}"
+
+          mkdir -p "${package_root}/.agents/plugins" "${package_root}/plugins"
+          cp .agents/plugins/marketplace.json "${package_root}/.agents/plugins/marketplace.json"
+          cp -R plugins/decision-pilot "${package_root}/plugins/decision-pilot"
+          cp README.md LICENSE "${package_root}/"
+
+          cd release
+          zip -r "${package_name}.zip" "${package_name}"
+          sha256sum "${package_name}.zip" > "${package_name}.sha256"
+
+      - name: 发布 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package_name="decision-pilot-v${version}"
+          gh release create "${GITHUB_REF_NAME}" \
+            "release/${package_name}.zip" \
+            "release/${package_name}.sha256" \
+            --verify-tag \
+            --generate-notes \
+            --title "DecisionPilot ${GITHUB_REF_NAME}"
